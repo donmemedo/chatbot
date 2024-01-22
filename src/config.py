@@ -12,7 +12,7 @@ from transformers import (
 import pandas as pd
 
 
-dd = pd.read_csv("./tot.csv")
+dd = pd.read_csv("tot.csv")
 
 class Settings(BaseSettings):
     """_summary_
@@ -28,13 +28,13 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "ChatBot"
-    VERSION: str = "0.1.1"
+    VERSION: str = "1.0.0"
 
     APPLICATION_ID: str = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
     # GRPC_IP: str = "172.24.65.20"
     # GRPC_PORT: int = 9035
-    SPLUNK_HOST: str = "172.24.65.206"
-    SPLUNK_PORT: int = 5141
+    SPLUNK_HOST: str = "127.0.0.1"
+    SPLUNK_PORT: int = 4521
     SPLUNK_INDEX: str = "dev"
 
     DATE_STRING: str = "%Y-%m-%d"
@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     MODEL: str = "makhataei/qa-fa-mdeberta-v3-base"
     ABSTRACT: list = dd["question"].values.tolist()
     ANSWERS: list = dd["answer"].values.tolist()
+    LOG_LOCATION: str = "../test/logger.log"
+    JSON_LOCATION: str = "../test/logger.json"
 
 
 def loaders():
