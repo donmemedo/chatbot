@@ -5,17 +5,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-import asyncio
 from src.config import settings, DATAS
 from dataclasses import dataclass
 from sentence_transformers import SentenceTransformer, util
 from src.logger import logger
-import time
 from transformers import (
     AutoTokenizer,
     AutoModel,
 )
-
+import json
 
 app = FastAPI(
     version=settings.VERSION,
@@ -83,7 +81,7 @@ async def response1(qa: Question):
             answi.append(f"{answ[i]}")
     if not answi:
         answi.append("لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید.")
-    logger.info(f"{question} \n {answer}")
+    logger.info(f"{question} \n {answi}")
     result = {
         "Question": question,  # len(marketers),
         "Answer": answer,  # len(marketers),
@@ -91,6 +89,7 @@ async def response1(qa: Question):
         # "Context": abstract,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
     }
+    logger.info(result)
     return JSONResponse(status_code=200, content=result)
 
 
@@ -139,60 +138,6 @@ async def response1(qa: Question):
     return JSONResponse(status_code=200, content=result)
 
 
-# @app.post("/response2", tags=["Default"])
-# # async def response(question):
-# async def response2(qa: Question):
-#     question = qa.question
-#     embeddings = DATAS[3]
-#     model = DATAS[2]
-#
-#     sentences = settings.ABSTRACT
-#     answ = settings.ANSWERS
-#     kwargs = {}
-#     emb1 = model.encode(question)
-#     # Compute cosine similarity between all pairs
-#     # cos_sim2 = util.cos_sim(emb1, embeddings)
-#     cos_sim = util.cos_sim(embeddings, emb1)
-#
-#     # Add all pairs to a list with their cosine similarity score
-#     all_sentence_combinations = []
-#     for i in range(len(cos_sim)):
-#         # for j in range(i+1, len(cos_sim2)):#range(i+1, len(cos_sim)):
-#         all_sentence_combinations.append([cos_sim[i], i])
-#         # all_sentence_combinations.append([cos_sim[i][j], i, j])
-#
-#     # Sort list by the highest cosine similarity score
-#     all_sentence_combinations = sorted(
-#         all_sentence_combinations, key=lambda x: x[0], reverse=True
-#     )
-#
-#     logger.info("Top-5 most similar pairs:")
-#     # for score, i, j in all_sentence_combinations[0:5]:
-#     #     logger.info("{} \t {} \t {:.4f}".format(sentences[i], sentences[j], cos_sim[i][j]))
-#     answer = []
-#     answi = []
-#     for score, i in all_sentence_combinations[0:5]:
-#         # logger.info("{} \t {:.4f}".format(sentences[i], cos_sim[i]))
-#         logger.info(f"{sentences[i]} \t {cos_sim[i]}")
-#         answer.append(f"{sentences[i]} \t {cos_sim[i]}")
-#
-#     for score, i in all_sentence_combinations[0:5]:
-#         # logger.info("{} \t {:.4f}".format(sentences[i], cos_sim[i]))
-#         logger.info(f"{answ[i]} \t {cos_sim[i]}")
-#         answi.append(f"{answ[i]} \t {cos_sim[i]}")
-#
-#     # logger.info(f"{question} {answer}")
-#     logger.info(f"{question} \n {answer}")
-#     result = {
-#         "Question": question,  # len(marketers),
-#         "Answer": answer,  # len(marketers),
-#         "RAnswer": answi,  # len(marketers),
-#         # "Context": abstract,
-#         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-#     }
-#     return JSONResponse(status_code=200, content=result)
-#
-
 @app.get("/ip-getter", tags=["Default"])
 async def read_root(request: Request):
     client_host = request.client.host
@@ -212,6 +157,18 @@ def background_loader():
         AutoTokenizer.from_pretrained(model_name_or_path)
         AutoModel.from_pretrained(model_name_or_path)
     logger.info("Models are loaded in Background.")
+
+
+@app.get("/log", tags=["Default"])
+def save_log():
+    file1 = open(settings.LOG_LOCATION, 'r')
+    file2 = open(settings.JSON_LOCATION, 'a')
+    lines = file1.readlines()
+    for line in lines:
+        file2.write(f"{json.loads(line)}\n")
+    file2.close()
+    logger.info("Logs are read from LoggerFile.")
+
 
 def loaders():
     for model_name_or_path in [

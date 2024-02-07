@@ -23,6 +23,7 @@ log_config = {
         "json": {
             "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
             "format": "%(asctime)s %(created)f %(exc_info)s %(filename)s %(funcName)s %(levelname)s %(modulename)s %(levelno)s %(lineno)d %(module)s %(message)s %(pathname)s %(process)s %(processName)s %(relativeCreated)d %(thread)s %(threadName)s",
+            # "use_colors": True,
         },
         "simple": {"format": "%(asctime)s %(levelname)s %(message)s"},
     },
@@ -37,6 +38,13 @@ log_config = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
         },
+        "file": {
+            "formatter": "json",
+            "class": "logging.FileHandler",
+            "filename": settings.LOG_LOCATION,
+            "mode": "a",
+            "encoding": "UTF-8",
+        },
         "splunk": {
             "class": "logging.handlers.SysLogHandler",
             "address": (settings.SPLUNK_HOST, settings.SPLUNK_PORT),
@@ -46,9 +54,8 @@ log_config = {
     },
     "loggers": {
         "chatbot": {
-            # "handlers": ["splunk", "default"],
-            "handlers": ["default"],
-            "level": "DEBUG",
+            "handlers": ["default","file","splunk"],
+            "level": "INFO",
             "propagate": True,
         },
         "uvicorn": {
