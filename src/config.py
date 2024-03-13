@@ -3,16 +3,16 @@
 Returns:
     _type_: _description_
 """
+import pandas as pd
 from pydantic_settings import BaseSettings
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 from transformers import (
     AutoTokenizer,
     AutoModel,
 )
-import pandas as pd
-
 
 dd = pd.read_csv("tot.csv")
+
 
 class Settings(BaseSettings):
     """_summary_
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "ChatBot"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.1.0"
 
     APPLICATION_ID: str = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
     # GRPC_IP: str = "172.24.65.20"
@@ -55,15 +55,18 @@ def loaders():
         AutoTokenizer.from_pretrained(model_name_or_path)
         AutoModel.from_pretrained(model_name_or_path)
 
-    model1_cpu = SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2", device="cpu")
-    model2_cpu = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", device="cpu")
+    model1_cpu = SentenceTransformer(
+        "sentence-transformers/paraphrase-multilingual-mpnet-base-v2", device="cpu"
+    )
+    model2_cpu = SentenceTransformer(
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", device="cpu"
+    )
 
     sentences = settings.ABSTRACT
 
     embeddings1_cpu = model1_cpu.encode(sentences)
     embeddings2_cpu = model2_cpu.encode(sentences)
-    return model1_cpu,embeddings1_cpu,model2_cpu,embeddings2_cpu
-
+    return model1_cpu, embeddings1_cpu, model2_cpu, embeddings2_cpu
 
 
 settings = Settings()
