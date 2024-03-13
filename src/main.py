@@ -51,10 +51,10 @@ async def response1(qa: Question):
     embeddings = DATAS[1]
     model = DATAS[0]
     sentences = settings.ABSTRACT
-    answ = settings.ANSWERS
+    default_answers = settings.ANSWERS
 
-    emb1 = model.encode(question)
-    cos_sim = util.cos_sim(embeddings, emb1)
+    question_embedding = model.encode(question)
+    cos_sim = util.cos_sim(embeddings, question_embedding)
 
     # Add all pairs to a list with their cosine similarity score
     all_sentence_combinations = []
@@ -67,25 +67,25 @@ async def response1(qa: Question):
     )
 
     logger.info("Top-5 most similar pairs:")
-    answer = []
-    answi = []
+    similar_questions = []
+    predicted_answers = []
     for score, i in all_sentence_combinations[0:5]:
         logger.info(f"{sentences[i]} \t {cos_sim[i]}")
-        answer.append(f"{sentences[i]}")
+        similar_questions.append(f"{sentences[i]}")
 
     for score, i in all_sentence_combinations[0:5]:
-        logger.info(f"{answ[i]} \t {cos_sim[i]}")
-        if score > 0.5:
-            answi.append(f"{answ[i]}")
-    if not answi:
-        answi.append(
+        logger.info(f"{default_answers[i]} \t {cos_sim[i]}")
+        if score > settings.SCORE:
+            predicted_answers.append(f"{default_answers[i]}")
+    if not predicted_answers:
+        predicted_answers.append(
             "لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید."
         )
-    logger.info(f"{question} \n {answi}")
+    logger.info(f"{question} \n {predicted_answers}")
     result = {
         "Question": question,  # len(marketers),
-        "Answer": answer,  # len(marketers),
-        "RAnswer": answi,  # len(marketers),
+        "Similar Questions": similar_questions,  # len(marketers),
+        "Predicted Answers": predicted_answers,  # len(marketers),
         # "Context": abstract,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
     }
@@ -94,15 +94,15 @@ async def response1(qa: Question):
 
 
 @app.post("/response2", tags=["Default"])
-async def response1(qa: Question):
+async def response2(qa: Question):
     question = qa.question
     embeddings = DATAS[3]
     model = DATAS[2]
     sentences = settings.ABSTRACT
-    answ = settings.ANSWERS
+    default_answers = settings.ANSWERS
 
-    emb1 = model.encode(question)
-    cos_sim = util.cos_sim(embeddings, emb1)
+    question_embedding = model.encode(question)
+    cos_sim = util.cos_sim(embeddings, question_embedding)
 
     # Add all pairs to a list with their cosine similarity score
     all_sentence_combinations = []
@@ -115,25 +115,25 @@ async def response1(qa: Question):
     )
 
     logger.info("Top-5 most similar pairs:")
-    answer = []
-    answi = []
+    similar_questions = []
+    predicted_answers = []
     for score, i in all_sentence_combinations[0:5]:
         logger.info(f"{sentences[i]} \t {cos_sim[i]}")
-        answer.append(f"{sentences[i]}")
+        similar_questions.append(f"{sentences[i]}")
 
     for score, i in all_sentence_combinations[0:5]:
-        logger.info(f"{answ[i]} \t {cos_sim[i]}")
-        if score > 0.5:
-            answi.append(f"{answ[i]}")
-    if not answi:
-        answi.append(
+        logger.info(f"{default_answers[i]} \t {cos_sim[i]}")
+        if score > settings.SCORE:
+            predicted_answers.append(f"{default_answers[i]}")
+    if not predicted_answers:
+        predicted_answers.append(
             "لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید."
         )
-    logger.info(f"{question} \n {answer}")
+    logger.info(f"{question} \n {predicted_answers}")
     result = {
         "Question": question,  # len(marketers),
-        "Answer": answer,  # len(marketers),
-        "RAnswer": answi,  # len(marketers),
+        "Similar Questions": similar_questions,  # len(marketers),
+        "Predicted Answers": predicted_answers,  # len(marketers),
         # "Context": abstract,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
     }

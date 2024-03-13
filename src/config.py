@@ -11,7 +11,7 @@ from transformers import (
     AutoModel,
 )
 
-dd = pd.read_csv("tot.csv")
+questions_answers = pd.read_csv("QAs.csv")
 
 
 class Settings(BaseSettings):
@@ -41,10 +41,11 @@ class Settings(BaseSettings):
     FASTAPI_DOCS: str = "/docs"
     FASTAPI_REDOC: str = "/redoc"
     MODEL: str = "makhataei/qa-fa-mdeberta-v3-base"
-    ABSTRACT: list = dd["question"].values.tolist()
-    ANSWERS: list = dd["answer"].values.tolist()
+    ABSTRACT: list = questions_answers["question"].values.tolist()
+    ANSWERS: list = questions_answers["answer"].values.tolist()
     LOG_LOCATION: str = "../test/logger.log"
     JSON_LOCATION: str = "../test/logger.json"
+    SCORE: int = 0.66
 
 
 def loaders():
