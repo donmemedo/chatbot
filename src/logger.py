@@ -54,7 +54,7 @@ log_config = {
     },
     "loggers": {
         "chatbot": {
-            "handlers": ["default","file","splunk"],
+            "handlers": ["default", "file", "splunk"],
             "level": "INFO",
             "propagate": True,
         },
@@ -71,7 +71,6 @@ log_config = {
         "uvicorn.error": {"level": "INFO", "propagate": False},
     },
 }
-
 
 dictConfig(log_config)
 logger = logging.getLogger("chatbot")
