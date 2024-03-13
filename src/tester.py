@@ -1,28 +1,28 @@
 import requests
-from src.config import settings
 from pymongo import MongoClient
 
 URL1 = "http://37.32.8.187:9001/response1"
 URL2 = "http://37.32.8.187:9001/response2"
+
+
 def get_database():
-    connection_sting ="mongodb://37.32.8.187:8081/"
+    connection_sting = "mongodb://37.32.8.187:8081/"
     client = MongoClient(connection_sting)
-    database = client["AnswerLogs"]
+    database = client["TestAnswerLogs"]
 
     return database
-
 
 
 db = get_database()
 db.response1.delete_many({})
 db.response2.delete_many({})
 
+
 def requester(question):
     total_request1 = requests.post(
         URL1,
         json={
-              "question": question,
-
+            "question": question,
         },
     )
 
@@ -35,8 +35,7 @@ def requester(question):
     total_request2 = requests.post(
         URL2,
         json={
-              "question": question,
-
+            "question": question,
         },
     )
 
@@ -47,6 +46,7 @@ def requester(question):
         pass
 
     # print(response)
+
 
 questions = []
 for q in questions:
