@@ -1,19 +1,21 @@
 """_summary_
 """
+import json
+from dataclasses import dataclass
+
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-from src.config import settings, DATAS
-from dataclasses import dataclass
 from sentence_transformers import SentenceTransformer, util
-from src.logger import logger
 from transformers import (
     AutoTokenizer,
     AutoModel,
 )
-import json
+
+from src.config import settings, DATAS
+from src.logger import logger
 
 app = FastAPI(
     version=settings.VERSION,
@@ -38,13 +40,9 @@ async def startup_events():
     logger.info(f"Ready for Your Questions:{jd.now().isoformat()}")
 
 
-
-
 @dataclass
 class Question:
     question: str
-
-
 
 
 @app.post("/response1", tags=["Default"])
@@ -53,10 +51,10 @@ async def response1(qa: Question):
     embeddings = DATAS[1]
     model = DATAS[0]
     sentences = settings.ABSTRACT
-    answ = settings.ANSWERS
+    default_answers = settings.ANSWERS
 
-    emb1 = model.encode(question)
-    cos_sim = util.cos_sim(embeddings, emb1)
+    question_embedding = model.encode(question)
+    cos_sim = util.cos_sim(embeddings, question_embedding)
 
     # Add all pairs to a list with their cosine similarity score
     all_sentence_combinations = []
@@ -69,23 +67,25 @@ async def response1(qa: Question):
     )
 
     logger.info("Top-5 most similar pairs:")
-    answer = []
-    answi = []
+    similar_questions = []
+    predicted_answers = []
     for score, i in all_sentence_combinations[0:5]:
         logger.info(f"{sentences[i]} \t {cos_sim[i]}")
-        answer.append(f"{sentences[i]}")
+        similar_questions.append(f"{sentences[i]}")
 
     for score, i in all_sentence_combinations[0:5]:
-        logger.info(f"{answ[i]} \t {cos_sim[i]}")
-        if score>0.5:
-            answi.append(f"{answ[i]}")
-    if not answi:
-        answi.append("لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید.")
-    logger.info(f"{question} \n {answi}")
+        logger.info(f"{default_answers[i]} \t {cos_sim[i]}")
+        if score > settings.SCORE:
+            predicted_answers.append(f"{default_answers[i]}")
+    if not predicted_answers:
+        predicted_answers.append(
+            "لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید."
+        )
+    logger.info(f"{question} \n {predicted_answers}")
     result = {
         "Question": question,  # len(marketers),
-        "Answer": answer,  # len(marketers),
-        "RAnswer": answi,  # len(marketers),
+        "Similar Questions": similar_questions,  # len(marketers),
+        "Predicted Answers": predicted_answers,  # len(marketers),
         # "Context": abstract,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
     }
@@ -94,15 +94,15 @@ async def response1(qa: Question):
 
 
 @app.post("/response2", tags=["Default"])
-async def response1(qa: Question):
+async def response2(qa: Question):
     question = qa.question
     embeddings = DATAS[3]
     model = DATAS[2]
     sentences = settings.ABSTRACT
-    answ = settings.ANSWERS
+    default_answers = settings.ANSWERS
 
-    emb1 = model.encode(question)
-    cos_sim = util.cos_sim(embeddings, emb1)
+    question_embedding = model.encode(question)
+    cos_sim = util.cos_sim(embeddings, question_embedding)
 
     # Add all pairs to a list with their cosine similarity score
     all_sentence_combinations = []
@@ -115,23 +115,25 @@ async def response1(qa: Question):
     )
 
     logger.info("Top-5 most similar pairs:")
-    answer = []
-    answi = []
+    similar_questions = []
+    predicted_answers = []
     for score, i in all_sentence_combinations[0:5]:
         logger.info(f"{sentences[i]} \t {cos_sim[i]}")
-        answer.append(f"{sentences[i]}")
+        similar_questions.append(f"{sentences[i]}")
 
     for score, i in all_sentence_combinations[0:5]:
-        logger.info(f"{answ[i]} \t {cos_sim[i]}")
-        if score>0.5:
-            answi.append(f"{answ[i]}")
-    if not answi:
-        answi.append("لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید.")
-    logger.info(f"{question} \n {answer}")
+        logger.info(f"{default_answers[i]} \t {cos_sim[i]}")
+        if score > settings.SCORE:
+            predicted_answers.append(f"{default_answers[i]}")
+    if not predicted_answers:
+        predicted_answers.append(
+            "لطفا سوال خود را مشخص‌تر بپرسید یا برای اتصال به اپراتور دکمه زیر را بزنید."
+        )
+    logger.info(f"{question} \n {predicted_answers}")
     result = {
         "Question": question,  # len(marketers),
-        "Answer": answer,  # len(marketers),
-        "RAnswer": answi,  # len(marketers),
+        "Similar Questions": similar_questions,  # len(marketers),
+        "Predicted Answers": predicted_answers,  # len(marketers),
         # "Context": abstract,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
     }
@@ -161,8 +163,8 @@ def background_loader():
 
 @app.get("/log", tags=["Default"])
 def save_log():
-    file1 = open(settings.LOG_LOCATION, 'r')
-    file2 = open(settings.JSON_LOCATION, 'a')
+    file1 = open(settings.LOG_LOCATION, "r")
+    file2 = open(settings.JSON_LOCATION, "a")
     lines = file1.readlines()
     for line in lines:
         file2.write(f"{json.loads(line)}\n")
@@ -178,15 +180,19 @@ def loaders():
         AutoTokenizer.from_pretrained(model_name_or_path)
         AutoModel.from_pretrained(model_name_or_path)
 
-    model1_cpu = SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2", device="cpu")
-    model2_cpu = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", device="cpu")
+    model1_cpu = SentenceTransformer(
+        "sentence-transformers/paraphrase-multilingual-mpnet-base-v2", device="cpu"
+    )
+    model2_cpu = SentenceTransformer(
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", device="cpu"
+    )
 
     sentences = settings.ABSTRACT
     kwargs = {}
     embeddings1_cpu = model1_cpu.encode(sentences)
     embeddings2_cpu = model2_cpu.encode(sentences)
     logger.info("Models are loaded in Background.")
-    return model1_cpu,embeddings1_cpu,model2_cpu,embeddings2_cpu
+    return model1_cpu, embeddings1_cpu, model2_cpu, embeddings2_cpu
 
 
 if __name__ == "__main__":

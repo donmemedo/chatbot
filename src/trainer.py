@@ -61,8 +61,8 @@ def prepare_train_features(examples):
                 token_end_index -= 1
             # Detect if the answer is out of the span (in which case this feature is labeled with the CLS index).
             if not (
-                offsets[token_start_index][0] <= start_char
-                and offsets[token_end_index][1] >= end_char
+                    offsets[token_start_index][0] <= start_char
+                    and offsets[token_end_index][1] >= end_char
             ):
                 tokenized_examples["start_positions"].append(cls_index)
                 tokenized_examples["end_positions"].append(cls_index)
@@ -70,8 +70,8 @@ def prepare_train_features(examples):
                 # Otherwise move the token_start_index and token_end_index to the two ends of the answer.
                 # Note: we could go after the last offset if the answer is the last word (edge case).
                 while (
-                    token_start_index < len(offsets)
-                    and offsets[token_start_index][0] <= start_char
+                        token_start_index < len(offsets)
+                        and offsets[token_start_index][0] <= start_char
                 ):
                     token_start_index += 1
                 tokenized_examples["start_positions"].append(token_start_index - 1)
@@ -122,7 +122,6 @@ for i in range(10):
     trainer.push_to_hub()
     tokenizer.push_to_hub("makhataei/qa-persian-bert-fa-base-uncased")
     lr = lr / 2
-
 
 # token_train = train_dataset.map(
 #     prepare_train_features, batched=True, remove_columns=train_dataset.column_names
