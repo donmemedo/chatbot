@@ -43,7 +43,7 @@ def prepare_train_features(examples):
         sequence_ids = tokenized_examples.sequence_ids(i)
         # One example can give several spans, this is the index of the example containing this span of text.
         sample_index = sample_mapping[i]
-        answers = examples["answers"][sample_index]
+        answers = {"answer_start":[examples["answer_start"][sample_index]],"answer_text":[examples["answer_text"][sample_index]]}
         # If no answers are given, set the cls_index as answer.
         if len(answers["answer_start"]) == 0:
             tokenized_examples["start_positions"].append(cls_index)
@@ -51,6 +51,8 @@ def prepare_train_features(examples):
         else:
             # Start/end character index of the answer in the text.
             start_char = answers["answer_start"][0]
+            if not start_char:
+                print("zzzz")
             end_char = start_char + len(answers["answer_text"][0])
             # Start token index of the current span in the text.
             token_start_index = 0
@@ -87,10 +89,11 @@ def prepare_train_features(examples):
 # model = AutoModelForQuestionAnswering.from_pretrained(model_checkpoint)
 # my_dataset = load_dataset("Gholamreza/pquad")
 # my_dataset = load_dataset("SajjadAyoubi/persian_qa")
-my_dataset = load_dataset("parsinlu_reading_comprehension")
+my_dataset = load_dataset(path="/home/makhataei/Projects1/ChatBot/src")
 train_dataset = my_dataset["train"]
+val_dataset = my_dataset["train"]
 # val_dataset = my_dataset["validation"]
-val_dataset = my_dataset["test"]
+# val_dataset = my_dataset["test"]
 
 
 for i in range(10):
