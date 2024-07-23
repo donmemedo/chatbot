@@ -1,0 +1,774 @@
+"""_summary_
+"""
+import datetime
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from khayyam import JalaliDatetime as jd
+import asyncio
+from src.config import settings
+from dataclasses import dataclass
+# from routers.subuser import subuser
+from src.logger import logger
+import time
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+import torch
+from src.dornai import dornai
+
+app = FastAPI(
+    version=settings.VERSION,
+    title=settings.SWAGGER_TITLE,
+    docs_url="/docs",
+    redoc_url="/redocs",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ORIGINS.split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.on_event("startup")
+async def startup_events():
+    logger.info(f"Time of Startup:{jd.now().isoformat()}")
+    # tokenizer = AutoTokenizer.from_pretrained(settings.MODEL)
+    # model = AutoModelForQuestionAnswering.from_pretrained(settings.MODEL)
+    # nlp = pipeline('question-answering', model, tokenizer)
+    # # nlp = pipeline('question-answering', model=settings.MODEL, tokenizer=settings.MODEL)
+    # return model,tokenizer,nlp
+    loaders()
+    logger.info(f"Ready for Your Questions:{jd.now().isoformat()}")
+
+
+@dataclass
+class Question:
+    question: str
+    # abstract: str = None
+
+
+@app.post("/response", tags=["Default"])
+# async def response(question):
+async def response(qa: Question):
+    question = qa.question
+    model_name_or_path = "makhataei/qa-fa-mdeberta-v3-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+
+@app.get("/ip-getter", tags=["Default"])
+async def read_root(request: Request):
+    client_host = request.client.host
+    client_scope = request.scope["client"]
+    logger.info(f"client host is {client_host}")
+    logger.info(f"client scope is {client_scope}")
+
+    return {"client_host": client_host, "client_scope": client_scope}
+
+
+@app.post("/qa-fa-mdeberta-v3-base-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_fa_mdeberta_v3_base_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-fa-mdeberta-v3-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+@app.post("/qa-fa-mdeberta-v3-base-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_fa_mdeberta_v3_base_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-fa-mdeberta-v3-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-albert-fa-zwnj-base-v2-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_albert_fa_zwnj_base_v2_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-albert-fa-zwnj-base-v2"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-albert-fa-zwnj-base-v2-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_albert_fa_zwnj_base_v2_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-albert-fa-zwnj-base-v2"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-xlm-roberta-large-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_xlm_roberta_large_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-xlm-roberta-large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-xlm-roberta-large-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_xlm_roberta_large_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-xlm-roberta-large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-mdeberta-v3-base-squad2-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_mdeberta_v3_base_squad2_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-mdeberta-v3-base-squad2"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-mdeberta-v3-base-squad2-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_mdeberta_v3_base_squad2_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-mdeberta-v3-base-squad2"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-bert-fa-zwnj-base-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_bert_fa_zwnj_base_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-bert-fa-zwnj-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-bert-fa-zwnj-base-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_bert_fa_zwnj_base_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-bert-fa-zwnj-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-xlmr-large-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_xlmr_large_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-xlmr-large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-xlmr-large-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_xlmr_large_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-xlmr-large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-distilbert-fa-zwnj-base-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_distilbert_fa_zwnj_base_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-distilbert-fa-zwnj-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-distilbert-fa-zwnj-base-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_distilbert_fa_zwnj_base_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-distilbert-fa-zwnj-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-bert-fa-base-uncased-cpu", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_bert_fa_base_uncased_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-bert-fa-base-uncased"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/tooka-base", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_bert_fa_base_uncased_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "PartAI/TookaBERT-Base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/tooka-large", tags=["Test-CPU"])
+# async def response(question):
+async def qa_persian_bert_fa_base_uncased_cpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "PartAI/TookaBERT-Large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-persian-bert-fa-base-uncased-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_bert_fa_base_uncased_gpu(qa: Question):
+    start = int(1000 * time.time())
+    question = qa.question
+    model_name_or_path = "makhataei/qa-persian-bert-fa-base-uncased"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    ccc = tokenizer(question).encodings[0].tokens
+    try:
+        ddd = (
+            tokenizer(
+                question,
+                truncation="only_second",
+                max_length=512,
+                stride=256,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+            )
+            .encodings[0]
+            .tokens
+        )
+    except:
+        # print("Length is WRONG!!!!")
+        ddd= list("Length is WRONG!!!!")
+    # print(MODEL)
+
+    result = {
+        "Context": question,  # len(marketers),
+        "Toknes": ccc,  # len(marketers),
+        "CorrectTokens": ddd,
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.post("/qa-test-gpu", tags=["Test-GPU"])
+# async def response(question):
+async def qa_persian_gpu(qa: Question):
+    start = int(1000 * time.time())
+    chat = qa.question
+    response=dornai(chat)
+
+    result = {
+        "Context": chat,  # len(marketers),
+        "IsValid": response[0],  # len(marketers),
+        "SystemAnswer": response[1],
+        # "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    }
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.get("/test", tags=["Default"])
+def background_loader():
+    for model_name_or_path in [
+        "makhataei/qa-fa-mdeberta-v3-base",
+        "makhataei/qa-persian-albert-fa-zwnj-base-v2",
+        "makhataei/qa-persian-xlm-roberta-large",
+        "makhataei/qa-persian-mdeberta-v3-base-squad2",
+        "makhataei/qa-persian-bert-fa-zwnj-base",
+        "makhataei/qa-persian-xlmr-large",
+        "makhataei/qa-persian-distilbert-fa-zwnj-base",
+        "makhataei/qa-persian-bert-fa-base-uncased",
+    ]:
+        AutoTokenizer.from_pretrained(model_name_or_path)
+        AutoModelForQuestionAnswering.from_pretrained(model_name_or_path)
+    logger.info("Models are loaded in Background.")
+
+
+def loaders():
+    mtokenizer = AutoTokenizer.from_pretrained(settings.MODEL)
+    mmodel = AutoModelForQuestionAnswering.from_pretrained(settings.MODEL)
+    nlp_cpu = pipeline("question-answering", model=mmodel, tokenizer=mtokenizer, device='cpu')
+    try:
+        nlp_gpu = pipeline("question-answering", model=mmodel, tokenizer=mtokenizer, device='cuda')
+    except:
+        logger.critical("There is No GPU")
+        nlp_gpu = pipeline("question-answering", model=mmodel, tokenizer=mtokenizer, device='cpu')
+    return mtokenizer, mmodel, nlp_cpu, nlp_gpu
+
+
+if __name__ == "__main__":
+    uvicorn.run(app="main:app", host="0.0.0.0", port=80)
